@@ -44,6 +44,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # 本地 dev 看不出 base 配错，线上才会暴露为全部 404，所以在这里拦住
+      - name: Verify base prefix
+        run: pnpm check:base
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
