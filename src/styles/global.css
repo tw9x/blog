@@ -1,0 +1,221 @@
+@import 'tailwindcss';
+
+/* 用 @theme 定义设计变量，Tailwind 会自动生成对应工具类（如 text-ink、bg-surface） */
+@theme {
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, 'Songti SC', 'Noto Serif SC', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 中性色阶：浅色模式 */
+  --color-ink: #1a1a19;
+  --color-muted: #6b6b66;
+  --color-faint: #9a9a94;
+  --color-line: #e6e4df;
+  --color-surface: #fdfcfa;
+  --color-surface-2: #f5f3ef;
+  --color-accent: #2f6f4f;
+
+  --text-base: 1.0625rem;
+  --leading-relaxed: 1.75;
+}
+
+/* 深色模式：覆盖同一批变量，无需给每个元素写 dark: 前缀 */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --color-ink: #e8e6e1;
+      --color-muted: #a3a29c;
+      --color-faint: #77766f;
+      --color-line: #322f2b;
+      --color-surface: #191817;
+      --color-surface-2: #211f1d;
+      --color-accent: #86c9a4;
+    }
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* 文章正文排版：只作用于 .prose，避免影响全局 */
+@layer components {
+  .prose {
+    color: var(--color-ink);
+    line-height: 1.8;
+  }
+
+  .prose > * + * {
+    margin-top: 1.1em;
+  }
+
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    font-weight: 600;
+    line-height: 1.35;
+    margin-top: 2em;
+    margin-bottom: 0.6em;
+    letter-spacing: -0.01em;
+  }
+
+  .prose h2 {
+    font-size: 1.4rem;
+  }
+
+  .prose h3 {
+    font-size: 1.15rem;
+  }
+
+  .prose a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  .prose a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .prose ul,
+  .prose ol {
+    padding-left: 1.4em;
+  }
+
+  .prose ul {
+    list-style: disc;
+  }
+
+  .prose ol {
+    list-style: decimal;
+  }
+
+  .prose li + li {
+    margin-top: 0.35em;
+  }
+
+  .prose li::marker {
+    color: var(--color-faint);
+  }
+
+  .prose blockquote {
+    border-left: 2px solid var(--color-line);
+    padding-left: 1.1em;
+    color: var(--color-muted);
+    font-style: italic;
+  }
+
+  .prose code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: 0.12em 0.38em;
+  }
+
+  .prose pre {
+    background-color: var(--color-surface-2) !important;
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    margin-top: 1.5em;
+  }
+
+  .prose img {
+    border-radius: 8px;
+    border: 1px solid var(--color-line);
+  }
+
+  .prose hr {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin: 2.5em 0;
+  }
+
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+
+  .prose th,
+  .prose td {
+    border-bottom: 1px solid var(--color-line);
+    padding: 0.5em 0.7em;
+    text-align: left;
+  }
+
+  .prose th {
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  /* Shiki 双主题：浅色用行内 style 的主色，深色模式改用 --shiki-dark 变量。
+     不写这段的话，深色背景上仍会渲染浅色主题的深色 token，对比度很低。 */
+  @media (prefers-color-scheme: dark) {
+    .prose pre.astro-code,
+    .prose pre.astro-code span {
+      color: var(--shiki-dark) !important;
+      background-color: transparent !important;
+      font-style: var(--shiki-dark-font-style) !important;
+      font-weight: var(--shiki-dark-font-weight) !important;
+      text-decoration: var(--shiki-dark-text-decoration) !important;
+    }
+
+    .prose pre.astro-code {
+      /* 用主题的暖色底替代 GitHub Dark 的冷灰，保持整体色调统一 */
+      background-color: var(--color-surface-2) !important;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,55 @@
+---
+import { formatDate, readingTime, url } from '../consts';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+{
+  posts.length === 0 ? (
+    <p class="text-muted">还没有文章。</p>
+  ) : (
+    <ul class="divide-y divide-line">
+      {posts.map((post) => (
+        <li class="py-6 first:pt-0">
+          <article class="group">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 class="font-serif text-lg leading-snug">
+                <a href={url(`/posts/${post.id}/`)} class="transition-colors group-hover:text-accent">
+                  {post.data.title}
+                </a>
+              </h2>
+              {post.data.draft && (
+                <span class="rounded-full border border-line px-2 py-0.5 text-xs text-faint">
+                  草稿
+                </span>
+              )}
+            </div>
+
+            {post.data.description && (
+              <p class="mt-1.5 text-[0.9375rem] text-muted">{post.data.description}</p>
+            )}
+
+            <p class="mt-2 flex flex-wrap items-center gap-x-3 text-sm text-faint">
+              <time datetime={post.data.pubDate.toISOString()}>
+                {formatDate(post.data.pubDate)}
+              </time>
+              <span aria-hidden="true">·</span>
+              <span>约 {readingTime(post.body ?? '')} 分钟</span>
+              {post.data.tags.length > 0 && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{post.data.tags.join('、')}</span>
+                </>
+              )}
+            </p>
+          </article>
+        </li>
+      ))}
+    </ul>
+  )
+}

@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import { getSortedPosts } from '../../utils';
+
+const posts = await getSortedPosts();
+---
+
+<BaseLayout title="文章" description="按时间倒序排列的全部文章。">
+  <PostList posts={posts} />
+</BaseLayout>

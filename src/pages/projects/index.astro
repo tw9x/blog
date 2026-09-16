@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSortedProjects } from '../../utils';
+import { formatDate, url } from '../../consts';
+
+const projects = await getSortedProjects();
+
+const statusLabel: Record<string, string> = {
+  active: '维护中',
+  wip: '进行中',
+  archived: '已归档',
+};
+---
+
+<BaseLayout title="项目" description="自己做过的项目与实验。">
+  <header class="mb-10">
+    <h1 class="font-serif text-2xl font-semibold tracking-tight">项目</h1>
+    <p class="mt-2 text-sm text-faint">共 {projects.length} 个</p>
+  </header>
+
+  {
+    projects.length === 0 ? (
+      <p class="text-muted">还没有项目记录。</p>
+    ) : (
+      <ul class="divide-y divide-line">
+        {projects.map((project) => (
+          <li class="py-6 first:pt-0">
+            <article class="group">
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 class="font-serif text-lg leading-snug">
+                  <a
+                    href={url(`/projects/${project.id}/`)}
+                    class="transition-colors group-hover:text-accent"
+                  >
+                    {project.data.title}
+                  </a>
+                </h2>
+                <span class="rounded-full border border-line px-2 py-0.5 text-xs text-faint">
+                  {statusLabel[project.data.status] ?? project.data.status}
+                </span>
+              </div>
+
+              {project.data.description && (
+                <p class="mt-1.5 text-[0.9375rem] text-muted">{project.data.description}</p>
+              )}
+
+              <p class="mt-2 flex flex-wrap items-center gap-x-3 text-sm text-faint">
+                <time datetime={project.data.startDate.toISOString()}>
+                  {formatDate(project.data.startDate)}
+                  {project.data.endDate && ` – ${formatDate(project.data.endDate)}`}
+                </time>
+                {project.data.stack.length > 0 && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{project.data.stack.join(' / ')}</span>
+                  </>
+                )}
+              </p>
+            </article>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</BaseLayout>

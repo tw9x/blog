@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatMonthDay, url } from '../consts';
+import { getSortedPosts, getSortedProjects } from '../utils';
+
+const posts = await getSortedPosts();
+const projects = await getSortedProjects();
+
+type Entry = {
+  kind: 'post' | 'project';
+  href: string;
+  title: string;
+  description: string;
+  date: Date;
+  meta?: string;
+};
+
+// 文章与项目合并成一条时间线：这一页是「做过和写过的一切」，而不只是文章列表
+const entries: Entry[] = [
+  ...posts.map((post) => ({
+    kind: 'post' as const,
+    href: url(`/posts/${post.id}/`),
+    title: post.data.title,
+    description: post.data.description,
+    date: post.data.pubDate,
+  })),
+  ...projects.map((project) => ({
+    kind: 'project' as const,
+    href: url(`/projects/${project.id}/`),
+    title: project.data.title,
+    description: project.data.description,
+    date: project.data.startDate,
+    meta: project.data.stack.slice(0, 2).join(' / '),
+  })),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+// 按年份分组
+const years = [...new Set(entries.map((e) => e.date.getUTCFullYear()))];
+const grouped = years.map((year) => ({
+  year,
+  items: entries.filter((e) => e.date.getUTCFullYear() === year),
+}));
+---
+
+<BaseLayout title="归档" hideFooter>
+  <div class="space-y-12">
+    {
+      grouped.map(({ year, items }) => (
+        <section>
+          {/* 年份与条目共用同一套网格，整页只有一条竖直基准线 */}
+          <h2 class="grid grid-cols-[3.25rem_1fr] items-baseline sm:grid-cols-[4rem_1fr]">
+            <span class="pr-4 text-right font-mono text-sm font-medium tabular-nums text-ink">
+              {year}
+            </span>
+            <span class="flex items-baseline gap-3 border-l border-line pb-3 pl-5">
+              <span class="text-xs tracking-[0.15em] text-faint">{items.length} 条记录</span>
+            </span>
+          </h2>
+
+          <ul>
+            {items.map((entry) => (
+              <li class="group grid grid-cols-[3.25rem_1fr] sm:grid-cols-[4rem_1fr]">
+                <time
+                  datetime={entry.date.toISOString()}
+                  class="pt-4 pr-4 text-right font-mono text-xs tabular-nums text-faint"
+                >
+                  {formatMonthDay(entry.date)}
+                </time>
+
+                {/* 边框画在内容列上、内边距在内侧：相邻条目的竖线首尾相接，形成连续时间轴 */}
+                <div class="relative min-w-0 border-l border-line py-4 pl-5">
+                  {/* 轴上的节点：定位在左边框上，把条目钉在时间线上 */}
+                  <span
+                    class:list={[
+                      'absolute top-[1.45rem] -left-[3px] size-[5px] rounded-full ring-4 ring-surface',
+                      entry.kind === 'project' ? 'bg-accent' : 'bg-faint',
+                    ]}
+                    aria-hidden="true"
+                  />
+
+                  <h3 class="font-serif text-[1.0625rem] leading-snug">
+                    <a href={entry.href} class="transition-colors group-hover:text-accent">
+                      {entry.title}
+                    </a>
+                  </h3>
+
+                  {entry.description && (
+                    <p class="mt-1 text-[0.9375rem] text-muted">{entry.description}</p>
+                  )}
+
+                  <p class="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-faint">
+                    <span
+                      class:list={[
+                        'rounded-sm border px-1.5 py-px',
+                        entry.kind === 'project' ? 'border-accent/40 text-accent' : 'border-line',
+                      ]}
+                    >
+                      {entry.kind === 'project' ? '项目' : '文章'}
+                    </span>
+                    {entry.meta && <span class="text-faint/80">{entry.meta}</span>}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>

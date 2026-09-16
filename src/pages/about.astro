@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../consts';
+
+const links = [
+  { label: 'GitHub', href: 'https://github.com/yourname' },
+  { label: '邮箱', href: 'mailto:you@example.com' },
+];
+---
+
+<BaseLayout title="关于" description="关于这个站点和我自己。">
+  <article class="prose">
+    <h1 class="!mt-0 font-serif text-2xl font-semibold tracking-tight">关于</h1>
+
+    <p>
+      我是 {SITE.author}，目前在做软件相关的工作。这个站点用来记录生活的片段和自己折腾的项目，
+      顺便练一练把想法写清楚的能力。
+    </p>
+
+    <h2>这里会写什么</h2>
+    <ul>
+      <li>生活记录：读书、旅行、一些当时觉得值得写下来的瞬间</li>
+      <li>项目笔记：做过的东西、踩过的坑、以及后来的反思</li>
+      <li>技术随想：不追求完整教程，更多是自己的理解</li>
+    </ul>
+
+    <h2>怎么搭的</h2>
+    <p>
+      站点用 Astro 构建，静态输出，样式基于 Tailwind CSS。正文是 Markdown，
+      写在 <code>src/content/posts/</code> 下面，提交到仓库后自动部署。
+    </p>
+
+    <h2>联系我</h2>
+    <p>
+      {
+        links.map((link, i) => (
+          <>
+            {i > 0 && ' · '}
+            <a href={link.href} rel="noopener noreferrer" target="_blank">
+              {link.label}
+            </a>
+          </>
+        ))
+      }
+    </p>
+  </article>
+</BaseLayout>

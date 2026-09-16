@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# GITHUB_TOKEN 需要这些权限才能发布到 Pages（id-token 用于 OIDC 部署校验）
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只保留最新一次部署，避免连续的推送让发布互相覆盖
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # 版本取自 package.json 的 packageManager 字段；两者同时指定会冲突，所以这里不写 version
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # 用 lockfile 精确安装，保证 CI 与本地依赖版本一致
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 内容 schema 或类型出错时让流水线失败，避免带着问题发布
+      - name: Type check
+        run: pnpm check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

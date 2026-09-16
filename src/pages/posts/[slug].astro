@@ -1,0 +1,137 @@
+---
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate, readingTime, isoDate, url } from '../../consts';
+import { getSortedPosts } from '../../utils';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      // 列表是倒序的，所以前一篇在数组里更靠后
+      prev: posts[index + 1] ?? null,
+      next: posts[index - 1] ?? null,
+    },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+  prev: CollectionEntry<'posts'> | null;
+  next: CollectionEntry<'posts'> | null;
+}
+
+const { post, prev, next } = Astro.props;
+const { Content, headings } = await render(post);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedTime={post.data.pubDate}
+>
+  <article>
+    <header class="mb-10">
+      <h1 class="font-serif text-3xl font-semibold tracking-tight text-balance">
+        {post.data.title}
+      </h1>
+      <p class="mt-3 flex flex-wrap items-center gap-x-3 text-sm text-faint">
+        <time datetime={isoDate(post.data.pubDate)}>{formatDate(post.data.pubDate)}</time>
+        <span aria-hidden="true">·</span>
+        <span>约 {readingTime(post.body ?? '')} 分钟</span>
+        {
+          post.data.updatedDate && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>更新于 {formatDate(post.data.updatedDate)}</span>
+            </>
+          )
+        }
+      </p>
+      {
+        post.data.tags.length > 0 && (
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {post.data.tags.map((tag) => (
+              <li class="rounded-full border border-line px-2.5 py-0.5 text-xs text-muted">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    {
+      toc.length >= 3 && (
+        <details
+          open
+          class="group mb-10 rounded-lg border border-line bg-surface-2 px-5 py-4"
+        >
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between text-xs font-medium tracking-wide text-faint uppercase transition-colors hover:text-muted [&::-webkit-details-marker]:hidden"
+          >
+            <span>目录</span>
+            <svg
+              class="size-3.5 shrink-0 transition-transform duration-200 group-open:rotate-180"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 6l4 4 4-4" />
+            </svg>
+          </summary>
+          <ul class="mt-3 space-y-1.5 text-sm">
+            {toc.map((h) => (
+              <li class={h.depth === 3 ? 'pl-4' : ''}>
+                <a href={`#${h.slug}`} class="text-muted transition-colors hover:text-accent">
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )
+    }
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <footer class="mt-14 border-t border-line pt-6">
+      <nav class="flex flex-col gap-3 text-sm sm:flex-row sm:justify-between" aria-label="上一篇和下一篇">
+        {
+          prev ? (
+            <a href={url(`/posts/${prev.id}/`)} class="group max-w-[45%]">
+              <span class="block text-xs text-faint">上一篇</span>
+              <span class="transition-colors group-hover:text-accent">{prev.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next && (
+            <a href={url(`/posts/${next.id}/`)} class="group max-w-[45%] sm:text-right">
+              <span class="block text-xs text-faint">下一篇</span>
+              <span class="transition-colors group-hover:text-accent">{next.data.title}</span>
+            </a>
+          )
+        }
+      </nav>
+      <p class="mt-8">
+        <a href={url('/posts/')} class="text-sm text-muted transition-colors hover:text-ink">
+          ← 返回文章列表
+        </a>
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
